@@ -1,6 +1,6 @@
 import { body, validationResult, query } from 'express-validator';
 import { getAuth } from "firebase/auth";
-
+import { ENUM_ACTION } from '../enum/actionEnum.js';
 const userValidationRules = () => {
   return [
     // username must be an email
@@ -20,11 +20,19 @@ const userLoginRules = () => {
   ]
 }
 
+const addTransactionRule = () => {
+  return [
+    body('type').isIn(["INCOME", "EXPENSE"]),
+    body('title').not().isEmpty().isString(),
+    body('amount').not().isEmpty().isNumeric()
+  ]
+}
+
 const historyRule = () => {
   return [
-    query('type').matches(/\b(?:administrator|editor|contributor|user)\b/),
-    query('title').isString(),
-    query('amount').isNumeric()
+    query('type').isIn(["INCOME", "EXPENSE"]).optional(),
+    query('title').isString().optional(),
+    query('amount').isNumeric().optional()
   ]
 }
 
@@ -62,4 +70,4 @@ const validateWithAuth = (req, res, next) => {
   }
 }
 
-export { validate, userValidationRules, validateWithAuth, userLoginRules, historyRule };
+export { validate, userValidationRules, validateWithAuth, userLoginRules, historyRule, addTransactionRule };

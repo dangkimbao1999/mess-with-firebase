@@ -19,7 +19,7 @@ export async function isAuthenticated(req, res, next) {
        const decodedToken = await firebase.auth().verifyIdToken(token);
     //    console.log("decodedToken", JSON.stringify(decodedToken))
        res.locals = { ...res.locals, uid: decodedToken.uid, role: decodedToken.role, email: decodedToken.email }
-       req.user_id = JSON.stringify(decodedToken);
+       req.user_id = decodedToken;
        return next();
    }
    catch (err) {

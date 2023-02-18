@@ -11,6 +11,20 @@ export const getUsers = async() => {
     return users;
 }
 
+export const getUserById = async(id) => {
+    const docRef = doc(db, "users", id)
+    const docSnap = await getDoc(docRef);
+    const user = docSnap.data();
+    return user;
+}
+
+export const getTxById = async(id) => {
+    const docRef = doc(db, "expenses", id)
+    const docSnap = await getDoc(docRef);
+    const tx = docSnap.data();
+    return tx;
+}
+
 export const getUsersByName = async(searchName) => {
     const users = [];
     const q = query(
@@ -24,15 +38,24 @@ export const getUsersByName = async(searchName) => {
     return users[0];
 }
 
-export const getUserTransactions = async(searchName) => {
-    const {history} = await getUsersByName(searchName);
-    return Promise.all(history.map(async (trx) => (await (await getDoc(doc(db, trx.path))).data())))
+export const getUserTransactions = async(userId, title, type, amount) => {
+    // const {history} = await getUserById(userId);
+    let q = query(collection(db, "expenses"));
+    q = query(q, where("ref", "==", userId))
+    if (title) q = query(q, where("title", "==", title));
+    if(type) q = query(q, where("type", "==", type));
+    const rs = await getDocs(q);
+    const transactionHistory = [];
+    rs.forEach((tx) => {
+        transactionHistory.push({...tx.data(), id: tx.id});
+    })
+    return(transactionHistory);
 }
 
 export const addUser = async (userInfo) => {
     // TODO: Make name field unique
     const auth = getAuth();
-    console.log('name: ', userInfo.name);
+    // console.log('name: ', userInfo.name);
     try {
         const {user} = await createUserWithEmailAndPassword(auth, userInfo.email, userInfo.password);
         await updateProfile(auth.currentUser, {displayName: userInfo.name});
@@ -41,6 +64,7 @@ export const addUser = async (userInfo) => {
             "email": user.email,
             "displayName": user.displayName,
             "phone": userInfo.phone, 
+            "history": [],
             "total": 0
         })
     } catch(err) {
@@ -74,6 +98,11 @@ export const editUser = async (userId, editedValue) => {
     await setDoc(userRef, editedValue, { merge: true });
 }
 
-export const addExpense = async (record) => {
+export const editTx = async (txId, editedValue) => {
+    const userRef = doc(db, "expenses", txId);
+    await setDoc(userRef, {title: editedValue}, { merge: true });
+}
+
+export const addTrasaction = async (record) => {
     return await addDoc(collection(db, "expenses"), record)
 }
