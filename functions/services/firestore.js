@@ -38,6 +38,20 @@ export const getUsersByName = async(searchName) => {
     return users[0];
 }
 
+export const getUsersByEmail = async(email) => {
+    const users = [];
+    const q = query(
+      collection(db, "users"),
+      where("email", "==", email)
+    );
+    const rs = await getDocs(q);
+    rs.forEach((user) => {
+        console.log(user);
+        users.push({ ...user.data(), id: user.id});
+    });
+    return users[0];
+}
+
 export const getUserTransactions = async(userId, title, type, amount) => {
     // const {history} = await getUserById(userId);
     let q = query(collection(db, "expenses"));
@@ -105,4 +119,9 @@ export const editTx = async (txId, editedValue) => {
 
 export const addTrasaction = async (record) => {
     return await addDoc(collection(db, "expenses"), record)
+}
+
+export const addHistory = async (id, expenseRef) => {
+    const {history} = await getUserById(id);
+    await editUser(id, {history: [...history, expenseRef]});
 }

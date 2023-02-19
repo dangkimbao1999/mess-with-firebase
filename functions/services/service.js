@@ -1,40 +1,32 @@
 import { ENUM_ACTION } from "../enum/actionEnum.js";
-import { addTrasaction, editUser, getTxById, getUserById, getUsersByName as getUserByName, getUserTransactions, editTx } from "./firestore.js";
-
-export const addExpense = async (id, title, amount, type) => {
-    const {total} = await getUserById(id);
-    //TODO: Validate valid amount
-    let amountResult 
-    if (type === ENUM_ACTION.IN)
-      amountResult= total + amount;
-    else 
-      amountResult = total - amount;
-    if (amountResult < 0) 
-      throw new Error('Balance is negative');
-    const editedValue = {total: amountResult};
-    await transfer(id, '', title, type, amount);
-    await editUser(id, editedValue);
-}
+import { balanceCheck } from "../utils/balanceCheck.js";
+import { addTrasaction, editUser, editTx, getUsersByEmail, addHistory } from "./firestore.js";
 
 export const editExpense = async (txid, title) => {
   await editTx(txid, title);
 }
 
-const addHistory = async (id, expenseRef) => {
-    const {history} = await getUserById(id);
-    await editUser(id, {history: [...history, expenseRef]});
-}
-
-
-export const transfer = async (fromUserId, toUserName, title, type, amount) => {
+export const transfer = async (fromUserId, toUserEmail, title, amount, type) => {
+  // let expenseRef;
+  //todo: if toUser exist trong user => phai3 add record cua3 ca3 2. neu61 ko thi2 chi3 1 tk thui
+  if(toUserEmail){
+    const totalFromValue = await balanceCheck(fromUserId, amount, ENUM_ACTION.EX);
+    const toUser = (await getUsersByEmail(toUserEmail));
+    if (!toUser) {
+      throw new Error('No user was found')
+    }
+    const totalToValue = await balanceCheck(toUser.id, amount, ENUM_ACTION.IN);
+    const expenseFromRef = await addTrasaction({title, type: ENUM_ACTION.EX, amount, ref: fromUserId, isTransfer: true});
+    await editUser(fromUserId, totalFromValue);
+    await addHistory(fromUserId, expenseFromRef)
+    const incomeToRef = await addTrasaction({title, type: ENUM_ACTION.IN, amount, ref: toUser.id, isTransfer: true});
+    await editUser(toUser.id, totalToValue);
+    await addHistory(toUser.id, incomeToRef)
+    return;
+  } else {
+    const editedValue = await balanceCheck(fromUserId, amount, type);
     const expenseRef = await addTrasaction({title, type, amount, ref: fromUserId});
-    //todo: if toUser exist trong user => phai3 add record cua3 ca3 2. neu61 ko thi2 chi3 1 tk thui
-    const fromUser = (await getUserById(fromUserId));
-    // if(toUserName){
-    //   const toUser = (await getUserByName(toUserName))[0];
-    //   return;
-    // }
-    
-    // await reduceAmount(fromUserName, amount);
     await addHistory(fromUserId, expenseRef);
+    await editUser(fromUserId, editedValue);
+  }    
 }

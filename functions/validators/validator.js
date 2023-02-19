@@ -22,9 +22,16 @@ const userLoginRules = () => {
 
 const addTransactionRule = () => {
   return [
-    body('type').isIn(["INCOME", "EXPENSE"]),
+    body('type').isIn(["INCOME", "EXPENSE", "TRANSFER"]),
     body('title').not().isEmpty().isString(),
-    body('amount').not().isEmpty().isNumeric()
+    body('amount').not().isEmpty().isNumeric(),
+    body('to').isString().optional(),
+  ]
+}
+const editTransactionRule = () => {
+  return [
+    body('txid').not().isEmpty().isString(),
+    body('title').not().isEmpty().isString(),
   ]
 }
 
@@ -70,4 +77,4 @@ const validateWithAuth = (req, res, next) => {
   }
 }
 
-export { validate, userValidationRules, validateWithAuth, userLoginRules, historyRule, addTransactionRule };
+export { validate, userValidationRules, validateWithAuth, userLoginRules, historyRule, addTransactionRule, editTransactionRule };
