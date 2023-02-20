@@ -1,7 +1,7 @@
 // const functions = require("firebase-functions");
 import functions, { https } from 'firebase-functions';
 import express from 'express';
-import { addUser, getUserTransactions, login } from './services/firestore.js';
+import { addUser, getUserById, getUserTransactions, login } from './services/firestore.js';
 import { userLoginRules, userValidationRules, validate, validateWithAuth, addTransactionRule, historyRule, editTransactionRule } from './validators/validator.js';
 import { isAuthenticated } from './validators/authenticated.js';
 import { editExpense, transfer } from './services/service.js';
@@ -33,6 +33,16 @@ app.post('/login', userLoginRules(), validate, async(req, res) => {
         res.send({response})
     } catch (err) {
         res.status(400).json({errors: err});
+    }
+})
+app.get('/personal-info', isAuthenticated, async(req, res) => {
+    const userId = req.user_id.uid;
+    try {
+        const info = await getUserById(userId);
+        delete info['history'];
+        res.send({response: info})
+    } catch(err){
+        res.status(400).json({errors: err.message})
     }
 })
 

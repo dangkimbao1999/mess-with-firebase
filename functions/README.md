@@ -40,55 +40,72 @@ npm run serve
 
 The server is run on `http://127.0.0.1:5001/deeptech-test-ee3e1/us-central1/default/`, to call an api, use `http://127.0.0.1:5001/deeptech-test-ee3e1/us-central1/default/{API}`
 
-- ```
-  POST: /register
-  ```
+- Register an account:
 
-  - Body:
-    - email: Your email to register (required)
-    - phone: Your phone number (required)
-    - name: Your name to display (required)
-    - password: Your password to login (required)
+  - ```
+    POST: /register
+    ```
 
-- ```
-  POST: /login
-  ```
+    - Body:
+      - email: Your email to register (required)
+      - phone: Your phone number (required)
+      - name: Your name to display (required)
+      - password: Your password to login (required)
 
-  - Body:
-    - email: Registered email (required)
-    - password: Password of your account (required)
+- Login:
 
-- ```
-  POST: /add-transaction
-  ```
+  - ```
+    POST: /login
+    ```
 
-  - access token is required to call
-  - Body:
-    - type: Type of the transaction (INCOME/EXPENSE/TRANSFER)
-    - title: Title of the transaction (required)
-    - amount: Amount of the transaction (required)
-    - to: Email of the account that you want to transfer to (Only applicable for TRANSFER type) (optional)
+    - Body:
+      - email: Registered email (required)
+      - password: Password of your account (required)
 
-- ```
-  GET: /history
-  ```
+- Perform transaction (INCOME/EXPENSE/TRANSFER)
 
-  - access token is required to call
-  - Query:
-    - title: Title of the transaction (optional)
-    - type: Type of the transaction (optional)
-    - limit: Item per page (optional)
-    - page: Page (start from 0) (optional)
+  - ```
+    POST: /add-transaction
+    ```
 
-- ```
-  PUT: /edit-transaction
-  ```
+    - access token is required to call
+    - Body:
+      - type: Type of the transaction (INCOME/EXPENSE/TRANSFER)
+      - title: Title of the transaction (required)
+      - amount: Amount of the transaction (required)
+      - to: Email of the account that you want to transfer to (Only applicable for TRANSFER type) (optional)
 
-  - access token is required to call
-  - Body: 
-    - txid: Id of the transaction (required)
-    - title: title of the transaction (required)
+- Get personal transaction history
 
+  - ```
+    GET: /history
+    ```
+
+    - access token is required to call
+    - Query:
+      - title: Title of the transaction (optional)
+      - type: Type of the transaction (optional)
+      - limit: Item per page (optional)
+      - page: Page (start from 0) (optional)
+
+- Edit one transaction
+
+  - ```
+    PUT: /edit-transaction
+    ```
+
+    - access token is required to call
+    - Body: 
+      - txid: Id of the transaction (required)
+      - title: title of the transaction (required)
+
+- Get personal information
+
+  - ```
+    GET: /personal-info	
+    ```
+
+    - access token is required to call
 # Code structure
 
 In order to fully maintainable and extendable, I decided to go with the following structure
