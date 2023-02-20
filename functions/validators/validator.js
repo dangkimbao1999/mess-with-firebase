@@ -39,7 +39,9 @@ const historyRule = () => {
   return [
     query('type').isIn(["INCOME", "EXPENSE"]).optional(),
     query('title').isString().optional(),
-    query('amount').isNumeric().optional()
+    query('amount').isNumeric().optional(),
+    query('page').isNumeric().optional(),
+    query('limit').isNumeric().optional()
   ]
 }
 

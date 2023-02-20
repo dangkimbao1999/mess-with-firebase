@@ -19,13 +19,21 @@ app.get('/', (req, res) => res.status(200).send({key: 'hey there'}));
 
 app.post('/register', userValidationRules(), validate, async(req, res) => {
     const user = req.body;
-    await addUser(user);
-    res.send({status: 200})
+    try {
+        await addUser(user);
+        res.send({status: 200})
+    } catch(err) {
+        res.status(400).json({errors: err.message});
+    }
 })
 app.post('/login', userLoginRules(), validate, async(req, res) => {
     const user = req.body;
-    const response = await login(user);
-    res.send({response})
+    try {
+        const response = await login(user);
+        res.send({response})
+    } catch (err) {
+        res.status(400).json({errors: err});
+    }
 })
 
 //todo: add income/expense
@@ -33,29 +41,44 @@ app.post('/add-transaction', addTransactionRule(), validate, isAuthenticated, as
     const tx = req.body;
     const userId = req.user_id.uid;
     if(tx.type !== ENUM_ACTION.TRANS) {
-        await transfer(userId, undefined, tx.title, tx.amount, tx.type);
-        res.send({status: 200})
+        try {
+            await transfer(userId, undefined, tx.title, tx.amount, tx.type);
+            res.send({status: 200})
+        } catch(err) {
+            res.status(400).json({errors: err.message});
+        }
     }
     else {
-        await transfer(userId, tx.to, tx.title, tx.amount, tx.type);
-        res.send({status: 200});
+        try{
+            await transfer(userId, tx.to, tx.title, tx.amount, tx.type);
+            res.send({status: 200});
+        } catch(err) {
+            res.status(400).json({errors: err.message});
+        }
     }
 })
 
 //todo: edit transaction
 app.put('/edit-transaction', editTransactionRule(), validate, isAuthenticated, async(req, res) => {
     const tx = req.body;
-    await editExpense(tx.txid, tx.title);
-    res.send({status: 200})
+    try {
+        await editExpense(tx.txid, tx.title);
+        res.send({status: 200})
+    } catch(err) {
+        res.status(400).json({errors: err});
+    }
 })
 
 //todo: show/filter history (pagination later) 
 app.get('/history', historyRule(), validate, isAuthenticated, async(req, res) => {
     const tx = req.query;
     const userId = req.user_id.uid;
-    console.log(userId);
-    const rs = await getUserTransactions(userId, tx.title, tx.type, tx.amount);
-    res.send({response: rs});
+    try {
+        const rs = await getUserTransactions(userId, tx.title, tx.type, tx.amount, tx.page, tx.limit);
+        res.send({response: rs});
+    } catch(err){
+        res.status(400).json({errors: err});
+    }
 })
 export default functions.https.onRequest(app);
 // export functions.https.onRequest(app);

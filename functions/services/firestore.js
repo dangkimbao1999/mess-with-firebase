@@ -1,4 +1,4 @@
-import { addDoc, collection, getDocs, query, where, doc, setDoc, getDoc } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, where, doc, setDoc, getDoc, startAfter, limit, orderBy, startAt } from "firebase/firestore";
 import { db } from "../config/firebase.js";
 import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, signOut, updateProfile } from "firebase/auth";
 
@@ -52,12 +52,29 @@ export const getUsersByEmail = async(email) => {
     return users[0];
 }
 
-export const getUserTransactions = async(userId, title, type, amount) => {
+export const getUserTransactions = async(userId, title, type, amount, page, size) => {
     // const {history} = await getUserById(userId);
     let q = query(collection(db, "expenses"));
     q = query(q, where("ref", "==", userId))
     if (title) q = query(q, where("title", "==", title));
     if(type) q = query(q, where("type", "==", type));
+    if(page && size){
+        try{
+            console.log(page, size);
+            if (page == 0){
+                q = query(q, orderBy('title'), limit(size));
+            } else{
+                const first = query(collection(db, "expenses"), orderBy('title'), limit(page * size + 1));
+                const documentSnapshots = await getDocs(first);
+                const lastVisible = documentSnapshots.docs[documentSnapshots.docs.length-1];
+                
+                q = query(q, orderBy('title'), startAfter(lastVisible), limit(size));
+            }
+        }catch(err) {
+            console.log(err)
+            throw new Error(err.message);
+        }
+    } 
     const rs = await getDocs(q);
     const transactionHistory = [];
     rs.forEach((tx) => {
@@ -67,9 +84,7 @@ export const getUserTransactions = async(userId, title, type, amount) => {
 }
 
 export const addUser = async (userInfo) => {
-    // TODO: Make name field unique
     const auth = getAuth();
-    // console.log('name: ', userInfo.name);
     try {
         const {user} = await createUserWithEmailAndPassword(auth, userInfo.email, userInfo.password);
         await updateProfile(auth.currentUser, {displayName: userInfo.name});
@@ -82,26 +97,27 @@ export const addUser = async (userInfo) => {
             "total": 0
         })
     } catch(err) {
-        console.log(err)
+        throw new Error(err.message);
     } 
 }
 
 export const login = async (user) => {
     const auth = getAuth();
-    signInWithEmailAndPassword(auth, user.email, user.password).then(cre => {
-        // console.log(cre.user);
-        return cre.user;
-    }).catch((err) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-    })
+    // signInWithEmailAndPassword(auth, user.email, user.password).then(cre => {
+    //     // console.log(cre.user);
+    //     return cre.user;
+    // }).catch((err) => {
+    //     const errorCode = err.code;
+    //     const errorMessage = err.message;
+    //     throw new Error(errorMessage);
+    // })
     const useCre = new Promise((resolve, reject) => {
         signInWithEmailAndPassword(auth, user.email, user.password).then(cre => {
             // console.log(cre.user);
             resolve(cre.user);
         }).catch((err) => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
+            const errorCode = err.code;
+            const errorMessage = err.message;
             reject(errorMessage);
         })
     })
