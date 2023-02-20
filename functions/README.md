@@ -15,6 +15,16 @@ Install all of the dependency
 npm install -g .
 ```
 
+If firebase dependencies are not installed globally, and on linux-based system, use:
+
+```
+npm i firebase
+npm i firebase-tools
+alias firebase="`npm config get prefix`/bin/firebase"
+```
+
+
+
 # Start up
 
 To start the project, use the following cmd:
